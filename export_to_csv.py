@@ -28,8 +28,10 @@ def authenticate_google():
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file(CREDS_JSON_FILE, SCOPES)
-            creds = flow.run_local_server(port=8080)
+            flow = InstalledAppFlow.from_client_secrets_file(
+                CREDS_JSON_FILE, SCOPES
+            )
+            creds = flow.run_local_server(port=8080, access_type='offline', prompt='consent')
 
         with open(TOKEN_FILE, 'w') as token_file:
             json.dump({
@@ -53,9 +55,11 @@ def fetch_albums():
     while url:
         response = requests.get(url, headers=headers).json()
         albums.extend(response.get("albums", []))
-        url = response.get("nextPageToken")
-        if url:
-            url = f"https://photoslibrary.googleapis.com/v1/albums?pageSize=50&pageToken={url}"
+        next_page_token = response.get("nextPageToken")
+        if next_page_token:
+            url = f"https://photoslibrary.googleapis.com/v1/albums?pageSize=50&pageToken={next_page_token}"
+        else:
+            url = None
 
     return albums
 
@@ -69,15 +73,18 @@ def export_to_csv(albums, filename=CSV_FILE):
     ensure_directory_exists(SAVE_DIR)
     timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-    album_photo_data = {album.get('title', 'Untitled'): int(album.get('mediaItemsCount', 0)) for album in albums}
+    album_photo_data = {
+        album.get('title', 'Untitled'): int(album.get('mediaItemsCount', 0))
+        for album in albums
+    }
 
     existing_data = []
     if os.path.exists(filename):
-        with open(filename, mode="r", newline="") as file:
+        with open(filename, mode="r", newline="", encoding='utf-8') as file:
             reader = csv.reader(file)
             existing_data = list(reader)
 
-    with open(filename, mode="w", newline="") as file:
+    with open(filename, mode="w", newline="", encoding='utf-8') as file:
         writer = csv.writer(file)
 
         if existing_data:
@@ -108,6 +115,6 @@ def export_to_csv(albums, filename=CSV_FILE):
     print(f"\u2705 Album data recorded at {timestamp}, saved to {filename}")
 
 
-if __name__ == "__main__":
+if _name_ == "_main_":
     albums = fetch_albums()
     export_to_csv(albums)
