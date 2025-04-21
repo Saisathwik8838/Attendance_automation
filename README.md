@@ -15,7 +15,8 @@ This project automates attendance using Google Photos albums. It checks whether 
 
 ## 🛠 Folder Structure
 
-google_photos_project/ │ ├── authenticate.py # Handles Google API OAuth authentication├── fetch_albums.py # Fetches albums from Google Photos
+google_photos_project/ │ ├── authenticate.py # Handles Google API OAuth authentication
+├── fetch_albums.py # Fetches albums from Google Photos
 ├── export_to_csv.py # Exports album photo counts to CSV
 ├── Daily_chnages.py # Compares current and previous counts
 ├── check_and_notify.py # Sends email to students with no photo change
